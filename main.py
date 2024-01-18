@@ -13,6 +13,7 @@ class CVE_DB(Model):
     id = IntegerField()
     full_name = CharField(max_length=1024)
     description = CharField(max_length=200)
+    language = CharField(max_length=255)
     url = CharField(max_length=1024)
     created_at = CharField(max_length=128)
     cve = CharField(max_length=64)
@@ -24,7 +25,7 @@ db.connect()
 db.create_tables([CVE_DB])
 
 def init_file():
-    newline = "# Github CVE Monitor\n\n> Automatic monitor github cve using Github Actions \n\n Last generated : {}\n\n| CVE | Name | Description | Date |\n|---|---|---|---|\n".format(datetime.now())
+    newline = "# Github CVE Monitor\n\n> Automatic monitor github cve using Github Actions \n\n Last generated : {}\n\n| CVE | Name | Description | Language | Date |\n|---|---|---|---|\n".format(datetime.now())
     with open('docs/README.md','w') as f:
         f.write(newline) 
     f.close()
@@ -60,6 +61,11 @@ def db_match(items):
             description = 'no description'
         else:
             description = html.escape(description.strip())
+        language = item["language"]
+        if language == "" or language == None:
+            language = 'no language'
+        else:
+            language = html.escape(language.strip())
         url = item["html_url"]
 ### EXTRACT CVE 
         matches = re.finditer(regex, url, re.MULTILINE)
@@ -76,6 +82,7 @@ def db_match(items):
             "id": id,
             "full_name": full_name,
             "description": description,
+            "language": language,
             "url": url,
             "created_at": created_at,
             "cve": cve.replace('_','-')
@@ -83,6 +90,7 @@ def db_match(items):
         CVE_DB.create(id=id,
                       full_name=full_name,
                       description=description,
+                      language=language,
                       url=url,
                       created_at=created_at,
                       cve=cve.upper().replace('_','-'))
